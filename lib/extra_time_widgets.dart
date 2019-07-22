@@ -1405,11 +1405,10 @@ class _CustomListTileState extends State<CustomListTile> {
                         actions: <Widget>[
                           FlatButton(
                             child: Text("تأكيد"),
-                            onPressed: () {
+                            onPressed: () {setState(() {
                               widget.block.confirmed = true;
-                              print(
-                                  "widget.block.confirmed = ${widget.block.confirmed}");
                               acceptDateTimeBlock(dtBlock: widget.block);
+                            });
                               Navigator.of(context).pop();
                             },
                           )
