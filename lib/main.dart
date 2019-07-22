@@ -12,6 +12,7 @@ main() => runApp(MaterialApp(
       buttonColor: PRIMARY_COLOR_2,
         primaryColor: PRIMARY_COLOR,
         cursorColor: PRIMARY_COLOR,
+        accentColor: PRIMARY_COLOR_2,
         appBarTheme: AppBarTheme(color: BACKGROUND),
         backgroundColor: BACKGROUND),
     home: LoginPage()));

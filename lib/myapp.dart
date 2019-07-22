@@ -3,23 +3,23 @@ import 'extra_time_widgets.dart';
 import 'constants.dart';
 import 'package:flutter/material.dart';
 import 'dto.dart';
-
 class MyApp extends StatefulWidget {
   final Player user;
-  MyApp({@required this.user});
+  final List<Stadium> stadiums;
+  MyApp({@required this.user,this.stadiums});
   @override
   _MyAppState createState() => _MyAppState();
 }
 
 class _MyAppState extends State<MyApp> {
-  static List<Stadium> _favList;
+  static List<Stadium> _favList = List<Stadium>();
+  
   var tabs;
   @override
-  void initState() {
+  void initState(){
     super.initState();
     _favList = widget.user.favorites;
-    print(_favList[0].name);
-
+    print(_favList);
     tabs = {
       Tab(
         icon: Icon(Icons.home),
@@ -32,7 +32,7 @@ class _MyAppState extends State<MyApp> {
         icon: Icon(Icons.search),
       ): CustomContentView(
           child: ListOfStadiums(
-        stadiums: samplesStadiums,
+        stadiums: widget.stadiums,
         borderColor: PRIMARY_COLOR,
         user: widget.user,
       )),

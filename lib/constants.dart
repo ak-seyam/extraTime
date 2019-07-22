@@ -1,6 +1,37 @@
-import 'dto.dart';
 import 'package:flutter/material.dart';
+import 'package:mysql1/mysql1.dart';
 
+///
+/// SERVER CONSTANTS
+///
+///Created!
+
+/*You have successfully created a new database. The details are below.
+
+Username: pgFQs6YlYL
+
+Database name: pgFQs6YlYL
+
+Password: O22SsEjXqt
+
+Server: remotemysql.com
+
+Port: 3306*/
+
+String host = "remotemysql.com"; 
+int port = 3306;
+String dbUsername = "pgFQs6YlYL";
+String dbAccPassword = "O22SsEjXqt";
+String db = "pgFQs6YlYL";
+
+/*
+String host = "192.168.1.5"; 
+int port = 3306;
+String dbUsername = "user1";
+String dbAccPassword = "user1";
+String db = "user1";
+*/
+/*
 List<Stadium> samplesStadiums = [
   Stadium(
       name: "ملعب اختبار",
@@ -27,6 +58,16 @@ List<Stadium> samplesStadiums = [
         "https://pulse-static-files.s3.amazonaws.com/worldrugby/photo/2016/09/27/c397aa26-52da-49ba-b381-eaa280f96873/Tokyo_Stadium.jpg"
       ])
 ];
+*/
+
+Future<MySqlConnection> getConnection() async {
+  return MySqlConnection.connect(ConnectionSettings(
+      db: db,
+      host: host,
+      port: port,
+      password: dbAccPassword,
+      user: dbUsername));
+}
 
 const PRIMARY_COLOR = Color(0xFF92d050);
 const PRIMARY_COLOR_TEXT = Color(0xFF1f2617);
@@ -34,9 +75,4 @@ const PRIMARY_COLOR_2 = Color(0xFF5fa83d);
 const BACKGROUND = Colors.white;
 const SHADOW_COLOR = Color(0xFFd1d4cf);
 
-List<AssetImage> IMAGES = [
-  AssetImage("images/0.png"),
-  AssetImage("images/1.png"),
-  AssetImage("images/2.png"),
-  AssetImage("images/3.png")
-];
+const List<int> IMAGES = [0, 1, 2, 3,4];

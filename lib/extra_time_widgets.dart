@@ -1,8 +1,16 @@
+import 'dart:async';
+
+import 'package:extratime/daf.dart';
 import 'package:extratime/myapp.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'dto.dart';
 import 'constants.dart';
+import 'dart:io';
+import 'daf.dart';
+
+//TODO: add stadiums gallery
 
 class CustomScaffold extends StatelessWidget {
   final Map<Tab, Widget> tabs;
@@ -99,7 +107,10 @@ class _NotificationsBarState extends State<NotificationsBar> {
                       ),
                       Expanded(
                           child: Text(
-                        widget.user.notifications[0],
+                        (widget.user.notifications != null &&
+                                widget.user.notifications.isNotEmpty)
+                            ? widget.user.notifications[0]
+                            : "",
                         textDirection: TextDirection.rtl,
                         style: TextStyle(
                           fontFamily: "Din",
@@ -173,7 +184,9 @@ class _StadiumCardState extends State<StadiumCard> {
                 decoration: BoxDecoration(
                   image: DecorationImage(
                       image: NetworkImage(
-                        this.widget.stadium.pics[0],
+                        this.widget.stadium.pics.isNotEmpty
+                            ? this.widget.stadium.pics[0]
+                            : "http://www.polyplastic-piscine-34.com/images/no-images/no-image.jpg",
                       ),
                       fit: BoxFit.fitWidth),
                 ),
@@ -237,6 +250,7 @@ class _ListOfStadiumsState extends State<ListOfStadiums> {
   @override
   void initState() {
     results = []..addAll(widget.stadiums);
+    print("${widget.stadiums}");
     super.initState();
   }
 
@@ -249,8 +263,6 @@ class _ListOfStadiumsState extends State<ListOfStadiums> {
           child: TextField(
             controller: tec,
             onChanged: (stadiumName) {
-              print(
-                  "inside onchange $results"); // TODO:remove this after debugging
               setState(() {
                 print("inside setstate");
                 results = widget.stadiums
@@ -296,50 +308,65 @@ class _MoreInfoState extends State<MoreInfo> {
   bool isInFavList = false;
   @override
   void initState() {
-    if (widget.user != null)
-      isInFavList = (widget.user.favorites.indexOf(widget.stadium) != -1);
+    if (widget.user != null) {
+      widget.user.favorites.forEach((favstadium) {
+        if (favstadium.toString() == widget.stadium.toString())
+          isInFavList = true;
+      });
+      print(("is in fav list: $isInFavList"));
+    }
+
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
+    print("stadiums ${widget.stadium.timetable}");
     return Scaffold(
       body: Column(
         children: <Widget>[
-          Stack(
-              alignment: Alignment.bottomCenter,
-              textDirection: TextDirection.rtl,
-              children: <Widget>[
-                Container(
-                  height: 200,
-                  decoration: BoxDecoration(
-                      image: DecorationImage(
-                          image: NetworkImage(widget.stadium.pics[0]),
-                          fit: BoxFit.fitWidth)),
-                ),
-                Container(
-                  height: 100,
-                  decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                          begin: Alignment(1, -1),
-                          end: Alignment(1, 1),
-                          colors: <Color>[
-                        Color.fromARGB(0, 0, 0, 0),
-                        Color.fromARGB(150, 0, 0, 0)
-                      ])),
-                ),
-                Container(
-                  margin: EdgeInsets.all(10.0),
-                  child: Text(
-                    this.widget.stadium.name,
-                    style: TextStyle(
-                        color: Colors.white,
-                        fontFamily: "Din",
-                        fontSize: 20,
-                        fontWeight: FontWeight.w500),
+          GestureDetector(onTap: (){
+            Navigator.push(context, MaterialPageRoute(builder: (context){
+              return ImagesGallery(pics: widget.stadium.pics.isNotEmpty?widget.stadium.pics:["http://www.polyplastic-piscine-34.com/images/no-images/no-image.jpg"]);
+            }));
+          },
+                      child: Stack(
+                alignment: Alignment.bottomCenter,
+                textDirection: TextDirection.rtl,
+                children: <Widget>[
+                  Container(
+                    height: 200,
+                    decoration: BoxDecoration(
+                        image: DecorationImage(
+                            image: NetworkImage(widget.stadium.pics.isNotEmpty
+                                ? widget.stadium.pics[0]
+                                : "http://www.polyplastic-piscine-34.com/images/no-images/no-image.jpg"),
+                            fit: BoxFit.fitWidth)),
                   ),
-                )
-              ]),
+                  Container(
+                    height: 100,
+                    decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                            begin: Alignment(1, -1),
+                            end: Alignment(1, 1),
+                            colors: <Color>[
+                          Color.fromARGB(0, 0, 0, 0),
+                          Color.fromARGB(150, 0, 0, 0)
+                        ])),
+                  ),
+                  Container(
+                    margin: EdgeInsets.all(10.0),
+                    child: Text(
+                      this.widget.stadium.name,
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontFamily: "Din",
+                          fontSize: 20,
+                          fontWeight: FontWeight.w500),
+                    ),
+                  )
+                ]),
+          ),
           Expanded(
             child: SingleChildScrollView(
               child: Column(
@@ -354,7 +381,7 @@ class _MoreInfoState extends State<MoreInfo> {
                   ),
                   CustomField(
                     text:
-                        "جدول الحجوزات المقبول:\n ${widget.stadium.timetable.join("\n")} \n",
+                        "جدول الحجوزات:\n ${widget.stadium.timetable.reversed.join("\n")} \n",
                     borderColor: widget.primaryColor,
                   )
                 ],
@@ -371,30 +398,67 @@ class _MoreInfoState extends State<MoreInfo> {
                     Expanded(
                       flex: 1,
                       child: GestureDetector(
-                          onTap: () {
+                          onTap: () async {
                             if (widget.user != null) {
                               setState(() {
-                                isInFavList = (isInFavList) ? false : true;
+                                isInFavList = !isInFavList;
                               });
+
                               if (isInFavList) {
                                 print(
-                                    "adding of user ${widget.user.userName} fav list stadium ${widget.stadium.name}");
-                                widget.user.favorites.add(widget.stadium);
-                                widget.user.notifications.insert(0,
-                                    "تم إضافة ملعب \"${widget.stadium.name}\" الى المفضلات");
-                              } else {
+                                    "player= ${widget.user}, playerId = ${widget.user.id}");
+
+                                await addToOrRemoveFromFav(
+                                    player: widget.user,
+                                    stadium: widget.stadium);
                                 print(
-                                    "removing of user ${widget.user.userName} fav list stadium ${widget.stadium.name}");
-                                widget.user.favorites.remove(widget.stadium);
-                                widget.user.notifications.insert(0,
-                                    "تم حذف ملعب \"${widget.stadium.name}\" من المفضلات");
+                                    "fav after addition ${widget.user.favorites}");
+                                //! Maybe adding await would fix it ?
+                                await addNewNotification(
+                                    player: widget.user,
+                                    notification:
+                                        "تم إضافة ملعب \"${widget.stadium.name}\" الى المفضلات");
+                                setState(() {
+                                  widget.user.addToFav(widget.stadium);
+                                  widget.user.notifications.add(
+                                      "تم إضافة ملعب \"${widget.stadium.name}\" الى المفضلات");
+                                });
+                              } else {
+                                print("in else statement");
+                                print(
+                                    "player= ${widget.user}, playerId = ${widget.user.id}");
+
+                                await addToOrRemoveFromFav(
+                                    player: widget.user,
+                                    stadium: widget.stadium,
+                                    remove: true);
+                                await addNewNotification(
+                                    player: widget.user,
+                                    notification:
+                                        "تم حذف ملعب \"${widget.stadium.name}\" من المفضلات");
+                                setState(() {
+                                  print(
+                                      "index of: ${widget.user.favorites.indexOf(widget.stadium)}");
+                                  Stadium tempFav = Stadium();
+                                  widget.user.favorites.forEach((stadium) {
+                                    if (stadium.toString() ==
+                                        widget.stadium.toString()) {
+                                      tempFav = stadium;
+                                    }
+                                  });
+                                  widget.user.favorites.remove(tempFav);
+                                  widget.user.notifications.add(
+                                      "تم حذف ملعب \"${widget.stadium.name}\" من المفضلات");
+                                });
+                                print(
+                                    "has been removed? ${widget.user.favorites}");
                               }
                             } else {
                               showDialog(
                                   context: context,
                                   builder: (context) => AlertDialog(
                                         title: Text(
-                                            "يتوجب التسجيل لكي تستطيع الحفظ في المفضلات"),
+                                            "يتوجب التسجيل لكي تستطيع الحجز"),
                                         actions: <Widget>[
                                           FlatButton(
                                             child: Text("سجل الدخول"),
@@ -428,21 +492,6 @@ class _MoreInfoState extends State<MoreInfo> {
                             ),
                           )),
                     ),
-                    /*Expanded(
-                        flex: 1,
-                        child: GestureDetector(
-                          onTap: () {
-                            print("location tapped!");
-                          },
-                          child: Container(
-                            width: 50.0,
-                            decoration: BoxDecoration(color: Colors.white),
-                            child: Icon(
-                              Icons.location_on,
-                              color: PRIMARY_COLOR_TEXT,
-                            ),
-                          ),
-                        ))*/
                     Expanded(
                         flex: 1,
                         child: GestureDetector(
@@ -491,17 +540,48 @@ class _MoreInfoState extends State<MoreInfo> {
                                   pickedDateStart != null ||
                                   pickedTimeEnd != null ||
                                   pickedTimeStart != null) {
-                                print("${start.toString()}");
-                                print("${end.toString()}");
-                                bool variable = widget.user
-                                    .book(start, end, widget.stadium);
+                                print("starting date: ${start.toString()}");
+                                print("ending date: ${end.toString()}");
+                                bool variable;
+                                setState(() {
+                                  print("BOOKING");
+                                  variable = widget.user
+                                      .book(start, end, widget.stadium);
+                                });
+
                                 print(variable);
                                 if (variable) {
-                                  widget.user.notifications.insert(0,
-                                      "تم حجز معلب ${widget.stadium.name} بنجاح");
+                                  setState(() {
+                                    widget.user.notifications.insert(0,
+                                        "تم حجز معلب ${widget.stadium.name} بنجاح");
+                                  });
+
+                                  addNewNotification(
+                                      player: widget.user,
+                                      notification:
+                                          "تم حجز معلب ${widget.stadium.name} بنجاح");
+                                  showDialog(
+                                      context: context,
+                                      builder: (context) {
+                                        return AlertDialog(
+                                          title: Text(
+                                              "تم حجز معلب ${widget.stadium.name} بنجاح"),
+                                        );
+                                      });
                                 } else {
-                                  widget.user.notifications.insert(0,
-                                      "خطأ: لم يتم حجز المعلب,\n من فضلك قم بمراجعة الجدول واختر فترة غير مشغولة");
+                                  setState(() {
+                                    widget.user.notifications.insert(0,
+                                        "خطأ: لم يتم حجز المعلب,\n من فضلك قم بمراجعة الجدول واختر فترة غير مشغولة");
+                                  });
+
+                                  showDialog(
+                                      context: context,
+                                      builder: (context) {
+                                        return AlertDialog(
+                                          title: Text(
+                                              "خطأ: لم يتم حجز المعلب,\n من فضلك قم بمراجعة الجدول واختر فترة غير مشغولة"),
+                                        );
+                                      });
                                 }
                               } else {
                                 print("user has canceled his request!");
@@ -554,11 +634,39 @@ class _MoreInfoState extends State<MoreInfo> {
   }
 }
 
-class UserProfile extends StatelessWidget {
+class UserProfile extends StatefulWidget {
   final User user;
   final Color primaryColor;
   UserProfile({@required this.primaryColor, @required this.user});
-//TODO: add user fetching field
+
+  @override
+  _UserProfileState createState() => _UserProfileState();
+}
+
+class _UserProfileState extends State<UserProfile> {
+  Widget personalInfo;
+  @override
+  void initState() {
+    super.initState();
+    print("USER INFO ${widget.user.personalInfo}\n is empty ${widget.user.personalInfo.isEmpty}\n first element equals nothing ${widget.user.personalInfo[0]==""}");
+
+    personalInfo = (widget.user.personalInfo != null &&
+            widget.user.personalInfo.isNotEmpty && widget.user.personalInfo[0]!="")
+        ? ListView.builder(
+            scrollDirection: Axis.vertical,
+            shrinkWrap: true,
+            itemCount: widget.user.personalInfo.length,
+            itemBuilder: (context, index) {
+              return CustomField(
+                borderColor: PRIMARY_COLOR,
+                text: widget.user.personalInfo[index],
+                textColor: PRIMARY_COLOR_TEXT,
+              );
+            },
+          )
+        : Text("عفوًا لا توجد معلومات شخصية",style: TextStyle(fontFamily: "Din"),textDirection: TextDirection.rtl,);
+  }
+
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
@@ -573,8 +681,8 @@ class UserProfile extends StatelessWidget {
               decoration: BoxDecoration(
                   borderRadius: BorderRadius.all(Radius.circular(50)),
                   image: DecorationImage(
-                      image: (user.profilePicture != null)
-                          ? user.profilePicture
+                      image: (widget.user.profilePicture != null)
+                          ? widget.user.profilePicture
                           : AssetImage("images/user.png"),
                       fit: BoxFit.cover)),
             ),
@@ -585,11 +693,11 @@ class UserProfile extends StatelessWidget {
                 onPressed: () {
                   Navigator.push(context, MaterialPageRoute(builder: (context) {
                     return ChooseAvatar(
-                      user: user,
+                      user: widget.user,
                     );
                   }));
                 },
-                backgroundColor: this.primaryColor,
+                backgroundColor: this.widget.primaryColor,
                 child: Icon(Icons.edit),
               ),
             )
@@ -597,26 +705,15 @@ class UserProfile extends StatelessWidget {
           Container(
               margin: EdgeInsets.all(10.0),
               child: Text(
-                user.name,
+                widget.user.name,
                 style: TextStyle(
                     fontFamily: "Din",
                     fontWeight: FontWeight.w400,
                     fontSize: 20),
               )),
-          ListView.builder(
-            scrollDirection: Axis.vertical,
-            shrinkWrap: true,
-            itemCount: user.personalInfo.length,
-            itemBuilder: (context, index) {
-              return CustomField(
-                borderColor: PRIMARY_COLOR,
-                text: user.personalInfo[index],
-                textColor: PRIMARY_COLOR_TEXT,
-              );
-            },
-          ),
+          personalInfo,
           CustomRaisedButton(
-            onTap: () {
+            onTap: () async {
               Navigator.pushAndRemoveUntil(
                   context,
                   MaterialPageRoute(builder: (context) => LoginPage()),
@@ -651,15 +748,33 @@ class CustomField extends StatelessWidget {
           children: <Widget>[
             Padding(
               padding: const EdgeInsets.all(8.0),
-              child: Text(
-                text,
-                textAlign: TextAlign.right,
-                textDirection: TextDirection.rtl,
-                style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w400,
-                    fontFamily: "Din",
-                    color: textColor),
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: GestureDetector(
+                  onLongPress: () {
+                    showDialog(
+                        context: context,
+                        builder: (context) {
+                          return AlertDialog(
+                            title: Text(
+                              text,
+                              textDirection: TextDirection.rtl,
+                              style: TextStyle(fontFamily: "Din"),
+                            ),
+                          );
+                        });
+                  },
+                  child: Text(
+                    text,
+                    textAlign: TextAlign.right,
+                    textDirection: TextDirection.rtl,
+                    style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w400,
+                        fontFamily: "Din",
+                        color: textColor),
+                  ),
+                ),
               ),
             )
           ],
@@ -677,43 +792,18 @@ class Notifications extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Column(
-        children: <Widget>[
-          Padding(
-            padding: const EdgeInsets.fromLTRB(8.0, 37.0, 8.0, 8.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: <Widget>[
-                Text(
-                  " اشعارات:",
-                  textDirection: TextDirection.rtl,
-                  style: TextStyle(
-                    fontSize: 45,
-                    fontFamily: "Din",
-                  ),
-                ),
-                Icon(
-                  Icons.notifications,
-                  color: primaryColor,
-                  size: 45,
-                ),
-              ],
-            ),
-          ),
-          Divider(),
+      appBar: AppBar(title: Text("اشعارات"),),
+      body: 
           ListView.builder(
-            scrollDirection: Axis.vertical,
-            shrinkWrap: true,
-            itemCount: user.notifications.length,
-            itemBuilder: (context, index) {
-              return CustomField(
-                borderColor: primaryColor,
-                text: user.notifications[index],
-              );
-            },
-          )
-        ],
-      ),
+              
+              itemCount: user.notifications.length,
+              itemBuilder: (context, index) {
+                return CustomField(
+                  borderColor: primaryColor,
+                  text: user.notifications[index],
+                );
+              },
+            )  
     );
   }
 }
@@ -725,11 +815,33 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> {
   User user;
+  bool asAdmin = false;
   bool readyToGo = false;
   TextEditingController _textEditingController = TextEditingController();
   TextEditingController _textEditingControllerPassword =
       TextEditingController();
   String username, password;
+
+  _connectionTest(context) async {
+    try {
+      var result = await InternetAddress.lookup('google.com');
+    } on SocketException {
+      Timer(Duration(seconds: 2), () {
+        Navigator.pushAndRemoveUntil(context,
+            MaterialPageRoute(builder: (context) {
+          return LoginPage();
+        }), (x) => false);
+      });
+      showDialog(
+          context: context,
+          builder: (context) {
+            return AlertDialog(
+              title: Text("تأكد من اتصالك بالانترنت ثم قم بإعادة المحاولة"),
+            );
+          });
+    }
+  }
+
   @override
   void dispose() {
     _textEditingController.dispose();
@@ -753,6 +865,7 @@ class _LoginPageState extends State<LoginPage> {
                 ),
                 TextField(
                   decoration: InputDecoration(
+                      labelStyle: TextStyle(fontFamily: "Din"),
                       labelText: "اسم المستخدم",
                       prefixIcon: Icon(Icons.account_circle),
                       border: OutlineInputBorder(
@@ -766,6 +879,7 @@ class _LoginPageState extends State<LoginPage> {
                 ),
                 TextField(
                   decoration: InputDecoration(
+                      labelStyle: TextStyle(fontFamily: "Din"),
                       labelText: "كلمة المرور",
                       prefixIcon: Icon(Icons.vpn_key),
                       border: OutlineInputBorder(
@@ -779,7 +893,37 @@ class _LoginPageState extends State<LoginPage> {
                   height: 24,
                 ),
                 GestureDetector(
-                  onTap: () {},
+                  onTap: () {
+                    showDialog(
+                        context: context,
+                        builder: (context) {
+                          return AlertDialog(
+                            title: Text("سجل حساب جديد كـ"),
+                            actions: <Widget>[
+                              GestureDetector(
+                                child: Text("سجل كلاعب"),
+                                onTap: () {
+                                  _connectionTest(context);
+                                  Navigator.push(context,
+                                      MaterialPageRoute(builder: (context) {
+                                    return SignUpAsPlayer();
+                                  }));
+                                },
+                              ),
+                              GestureDetector(
+                                  onTap: () {
+                                    _connectionTest(context);
+                                    Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                            builder: (context) =>
+                                                SignUpAsOwner()));
+                                  },
+                                  child: Text("سجل كصاحب ملاعب"))
+                            ],
+                          );
+                        });
+                  },
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: <Widget>[
@@ -795,67 +939,86 @@ class _LoginPageState extends State<LoginPage> {
                     ],
                   ),
                 ),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: <Widget>[
+                    Text(
+                      "التسجيل كمدير ملاعب",
+                      style: TextStyle(fontFamily: "Din"),
+                    ),
+                    Checkbox(
+                      checkColor: Colors.white,
+                      activeColor: PRIMARY_COLOR,
+                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      value: asAdmin,
+                      onChanged: (newValue) {
+                        setState(() {
+                          asAdmin = newValue;
+                          print(asAdmin);
+                        });
+                      },
+                    ),
+                  ],
+                ),
                 CustomRaisedButton(
-                  onTap: () {
-                    //TODO :if user is not a player
-                    if (_textEditingController.text == "admin" &&
-                        _textEditingControllerPassword.text == "admin") {
-                      user = Player(
-                          name: "abdullah",
-                          password: "admin",
-                          bookedStadiums: <Stadium>[samplesStadiums[0]],
-                          favoritesList: <Stadium>[samplesStadiums[0]],
-                          personalinfo: <String>["prop1", "prop2", "prop3"],
-                          userName: "admin",
-                          notifications: [
-                            "notification 1",
-                            "notification2",
-                            "notification3"
-                          ]);
-                      Navigator.pushAndRemoveUntil(context,
-                          MaterialPageRoute(builder: (context) {
-                        return MyApp(
-                          user: user,
-                        );
-                      }), (d) => false);
-                    } else if (_textEditingController.text == "admin2" &&
-                        _textEditingControllerPassword.text == "admin2") {
-                      user = Owner(
-                          name: "صاحب الملعب 1",
-                          password: "admin2",
-                          personalinfo: ["معلومة 1", "info 2", "info3"],
-                          staduims: [samplesStadiums[0]],
-                          userName: "admin2");
-                      Navigator.pushAndRemoveUntil(context,
-                          MaterialPageRoute(builder: (context) {
-                        return ControlPanal(
-                          user: user,
-                        );
-                      }), (x) => false);
-                    } else {
+                  onTap: () async {
+                    _connectionTest(context);
+                    if (_textEditingController.text == "" ||
+                        _textEditingControllerPassword.text == "") {
                       showDialog(
                           context: context,
-                          builder: (context) {
-                            return AlertDialog(
-                              title: Text(
-                                "خطأ في اسم المستخدم او كلمة المرور",
-                              ),
-                              actions: <Widget>[
-                                FlatButton(
-                                  child: Text(
-                                    "اغلاق",
-                                    textDirection: TextDirection.rtl,
-                                    style: TextStyle(
-                                        color: PRIMARY_COLOR,
-                                        fontFamily: "Din"),
-                                  ),
-                                  onPressed: () {
-                                    Navigator.of(context).pop();
-                                  },
-                                )
-                              ],
-                            );
-                          });
+                          builder: (context) => AlertDialog(
+                                title: Text("ادخل اسم المستخدم/ كلمة المرور"),
+                                actions: <Widget>[
+                                  FlatButton(
+                                    onPressed: () {
+                                      Navigator.of(context).pop();
+                                    },
+                                    child: Text("اغلاق"),
+                                  )
+                                ],
+                              ));
+                    } else {
+                      if (asAdmin) {
+                        Owner res = await getOwner(
+                            password:
+                                _textEditingControllerPassword.text.trim(),
+                            username: _textEditingController.text.trim());
+                        print("owner : $res");
+                        if (res != null) {
+                          Navigator.pushAndRemoveUntil(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => ControlPanal(
+                                        user: res,
+                                      )),
+                              (x) => false);
+                        } else {
+                          wrongUserNameOrPassword(context);
+                        }
+                      } else {
+                        Player res = await getPlayer(
+                            password:
+                                _textEditingControllerPassword.text.trim(),
+                            username: _textEditingController.text.trim());
+                        print("INSIDE GETTING PLAYER $res");
+                        if (res != null) {
+                          print("user nickname: ${res.favorites}");
+                          List<Stadium> temp = await getListOfStadiums();
+                          Navigator.pushAndRemoveUntil(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => MyApp(
+                                        user: res,
+                                        stadiums: temp,
+                                      )),
+                              (x) => false);
+                          print("sent user${res.id}");
+                        } else {
+                          wrongUserNameOrPassword(context);
+                        }
+                      }
                     }
                   },
                   text: "تسجيل الدخول",
@@ -863,12 +1026,15 @@ class _LoginPageState extends State<LoginPage> {
                 Padding(
                   padding: const EdgeInsets.fromLTRB(0, 40, 0, 0),
                   child: GestureDetector(
-                      onTap: () {
+                      onTap: () async {
+                        _connectionTest(context);
+                        List<Stadium> stadiums = await getListOfStadiums();
                         Navigator.pushAndRemoveUntil(
                             context,
                             MaterialPageRoute(
-                                builder: (context) =>
-                                    NOSIGNINGINListOfStadiums()),
+                                builder: (context) => NOSIGNINGINListOfStadiums(
+                                      stadiums: stadiums,
+                                    )),
                             (x) => false);
                       },
                       child: Text("او اذهب لقائمة الملاعب بدون تسجيل",
@@ -889,7 +1055,8 @@ class _LoginPageState extends State<LoginPage> {
 class CustomRaisedButton extends StatelessWidget {
   final VoidCallback onTap;
   final String text;
-  CustomRaisedButton({@required this.onTap, @required this.text});
+  CustomRaisedButton({@required this.onTap, @required this.text, key})
+      : super(key: key);
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -966,20 +1133,167 @@ class ListOfStadiumsControlPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: ListView.builder(
-        scrollDirection: Axis.vertical,
-        shrinkWrap: true,
-        itemCount: user.stadiums.length,
-        itemBuilder: (context, index) {
-          return ListTile(
-            onTap: () {
-              Navigator.push(context, MaterialPageRoute(builder: (context) {
-                return ListOfBlocks(stadium: user.stadiums[index]);
-              }));
-            },
-            title: Text(user.stadiums[index].name),
-          );
+      body: (user.stadiums != null)
+          ? ListView.builder(
+              scrollDirection: Axis.vertical,
+              shrinkWrap: true,
+              itemCount: user.stadiums.length,
+              itemBuilder: (context, index) {
+                return ListTile(
+                  onTap: () {
+                    print("${user.stadiums[index]}");
+                    Navigator.push(context,
+                        MaterialPageRoute(builder: (context) {
+                      return ListOfBlocks(stadium: user.stadiums[index]);
+                    }));
+                  },
+                  title: Text(user.stadiums[index].name),
+                );
+              },
+            )
+          : Text(""),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (context) => AddStadiumRoute(owner: user)));
         },
+        backgroundColor: PRIMARY_COLOR,
+        child: Icon(Icons.add),
+      ),
+    );
+  }
+}
+
+class AddStadiumRoute extends StatefulWidget {
+  final Owner owner;
+  AddStadiumRoute({@required this.owner});
+  @override
+  _AddStadiumRouteState createState() => _AddStadiumRouteState();
+}
+
+class _AddStadiumRouteState extends State<AddStadiumRoute> {
+  GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  String name, location, phone;
+  List<String> pics = List<String>(), posts = List<String>();
+  DTBlock dtblock;
+  int countPics = 1;
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("اضف ملعب جديد"),
+      ),
+      bottomNavigationBar: GestureDetector(
+        onTap: () async {
+          final form = _formKey.currentState;
+          if (form.validate()) {
+            form.save();
+            print("THE OWNER IS ${widget.owner}");
+            if (await addNewStadium(
+                location: location,
+                name: name,
+                owner: widget.owner,
+                phone: phone,
+                pics: pics)) {
+              Navigator.of(context).pop();
+            } else {
+              showDialog(
+                  context: context,
+                  builder: (context) {
+                    return AlertDialog(
+                      title: Text(
+                          "يوجد معلب في هذا المكان بالفعل او ان خطأ غير متوقع قد حدث"),
+                      actions: <Widget>[
+                        FlatButton(
+                          child: Text("اغلاق"),
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                          },
+                        )
+                      ],
+                    );
+                  });
+            }
+          }
+        },
+        child: Container(
+          height: 100,
+          color: PRIMARY_COLOR,
+          child: Center(
+            child: Text(
+              "Done".toUpperCase(),
+              style: TextStyle(color: Colors.white),
+            ),
+          ),
+        ),
+      ),
+      body: Form(
+        key: _formKey,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              TextFormField(
+                decoration: InputDecoration(
+                    labelText: "name",
+                    border: UnderlineInputBorder(
+                        borderSide:
+                            BorderSide(width: 1.0, color: PRIMARY_COLOR_2))),
+                onSaved: (value) => this.name = value,
+              ),
+              TextFormField(
+                decoration: InputDecoration(
+                    labelText: "location",
+                    border: UnderlineInputBorder(
+                        borderSide:
+                            BorderSide(width: 1.0, color: PRIMARY_COLOR_2))),
+                onSaved: (value) => this.location = value,
+              ),
+              TextFormField(
+                keyboardType: TextInputType.numberWithOptions(
+                    decimal: false, signed: false),
+                decoration: InputDecoration(
+                    labelText: "phone",
+                    border: UnderlineInputBorder(
+                        borderSide:
+                            BorderSide(width: 1.0, color: PRIMARY_COLOR_2))),
+                onSaved: (value) => this.phone = value,
+              ),
+              GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      countPics++;
+                    });
+                  },
+                  child: Center(
+                    child: Icon(Icons.add),
+                  )),
+              ListView.builder(
+                shrinkWrap: true,
+                scrollDirection: Axis.vertical,
+                itemCount: countPics,
+                itemBuilder: (context, index) {
+                  return TextFormField(
+                    decoration: InputDecoration(
+                        labelText: "pics",
+                        border: UnderlineInputBorder(
+                            borderSide: BorderSide(
+                                width: 1.0, color: PRIMARY_COLOR_2))),
+                    onSaved: (value) {
+                      if (value != null) this.pics.add(value);
+                      print(pics);
+                      setState(() {
+                        countPics++;
+                      });
+                    },
+                  );
+                },
+              )
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -999,6 +1313,7 @@ class _ListOfBlocksState extends State<ListOfBlocks> {
 
   @override
   Widget build(BuildContext context) {
+    print("time table: ${widget.stadium.timeTable}");
     return Scaffold(
       floatingActionButton: FloatingActionButton(
         backgroundColor: PRIMARY_COLOR,
@@ -1011,7 +1326,7 @@ class _ListOfBlocksState extends State<ListOfBlocks> {
                       FlatButton(
                         onPressed: () {
                           if ((tec.text != null || tec.text != " ")) {
-                            widget.stadium.posts.add(tec.text);
+                            widget.stadium.writePost(tec.text);
                             Navigator.of(context).pop();
                           }
                         },
@@ -1094,6 +1409,7 @@ class _CustomListTileState extends State<CustomListTile> {
                               widget.block.confirmed = true;
                               print(
                                   "widget.block.confirmed = ${widget.block.confirmed}");
+                              acceptDateTimeBlock(dtBlock: widget.block);
                               Navigator.of(context).pop();
                             },
                           )
@@ -1111,13 +1427,21 @@ class _CustomListTileState extends State<CustomListTile> {
   }
 }
 
-class NOSIGNINGINListOfStadiums extends StatelessWidget {
+class NOSIGNINGINListOfStadiums extends StatefulWidget {
+  final List<Stadium> stadiums;
+  NOSIGNINGINListOfStadiums({@required this.stadiums});
+  @override
+  _NOSIGNINGINListOfStadiumsState createState() =>
+      _NOSIGNINGINListOfStadiumsState();
+}
+
+class _NOSIGNINGINListOfStadiumsState extends State<NOSIGNINGINListOfStadiums> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: ListOfStadiums(
         borderColor: PRIMARY_COLOR,
-        stadiums: samplesStadiums,
+        stadiums: widget.stadiums,
       ),
       appBar: AppBar(
         actions: <Widget>[
@@ -1203,7 +1527,7 @@ class _ChooseAvatarState extends State<ChooseAvatar> {
   void initState() {
     IMAGES.forEach((image) => avatars.add(Avatar(
           user: widget.user,
-          image: image,
+          imageIndex: image,
         )));
     super.initState();
   }
@@ -1226,14 +1550,15 @@ class _ChooseAvatarState extends State<ChooseAvatar> {
 }
 
 class Avatar extends StatelessWidget {
-  final AssetImage image;
+  final int imageIndex;
   final Player user;
-  Avatar({@required this.image, @required this.user});
+
+  Avatar({@required this.imageIndex, @required this.user});
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        this.user.profilePicture = image;
+        this.user.setProfilePicture(imageIndex);
         Navigator.of(context).pop();
       },
       child: Container(
@@ -1241,7 +1566,291 @@ class Avatar extends StatelessWidget {
         margin: EdgeInsets.all(10.0),
         decoration: BoxDecoration(
             border: Border.all(color: PRIMARY_COLOR),
-            image: DecorationImage(image: image, fit: BoxFit.cover)),
+            image: DecorationImage(
+                image: AssetImage("images/$imageIndex.png"),
+                fit: BoxFit.cover)),
+      ),
+    );
+  }
+}
+
+class SignUpAsPlayer extends StatefulWidget {
+  @override
+  _SignUpAsPlayerState createState() => _SignUpAsPlayerState();
+}
+
+class _SignUpAsPlayerState extends State<SignUpAsPlayer> {
+  GlobalKey<FormState> _formkey = GlobalKey<FormState>();
+  var name, password, username, moreinfo;
+  String errorMsg = "";
+  submit() async {
+    FormState fs = _formkey.currentState;
+    if (fs.validate()) {
+      fs.save();
+
+      if (!await addNewPlayer(
+          name: name,
+          password: password,
+          username: username,
+          personalInfo: moreinfo)) {
+        setState(() {
+          errorMsg = "البيانات المدخلة غير صحيحة";
+        });
+      } else {
+        showDialog(
+            context: context,
+            builder: (context) {
+              return AlertDialog(
+                title: Text(
+                    "تم تسجيل الحساب $username بنجاح وسيتم تحويلك الى صفحة تسجيل الدخول خلال بضع ثوان"),
+              );
+            });
+        Timer(Duration(seconds: 3), () {
+          Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (context) => LoginPage()),
+              (x) => false);
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Form(
+        key: _formkey,
+        child: Container(
+          margin: EdgeInsets.all(8.0),
+          alignment: Alignment.center,
+          padding: EdgeInsets.all(16.0),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: TextFormField(
+                    decoration: InputDecoration(
+                        border: OutlineInputBorder(
+                            borderRadius:
+                                BorderRadius.all(Radius.circular(20.0)),
+                            borderSide:
+                                BorderSide(color: PRIMARY_COLOR_2, width: 1.0)),
+                        labelText: "اسم المستخدم"),
+                    validator: (value) =>
+                        value.isEmpty ? "ادخل اسم المستخدم" : null,
+                    onSaved: (value) => username = value,
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: TextFormField(
+                    onSaved: (value) => password = value,
+                    decoration: InputDecoration(
+                        border: OutlineInputBorder(
+                            borderRadius:
+                                BorderRadius.all(Radius.circular(20.0)),
+                            borderSide:
+                                BorderSide(color: PRIMARY_COLOR_2, width: 1.0)),
+                        labelText: "كلمة السر"),
+                    obscureText: true,
+                    validator: (value) =>
+                        value.isEmpty ? "ادخل كلمة المرور" : null,
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: TextFormField(
+                    onSaved: (value) => name = value,
+                    decoration: InputDecoration(
+                        border: OutlineInputBorder(
+                            borderRadius:
+                                BorderRadius.all(Radius.circular(20.0)),
+                            borderSide:
+                                BorderSide(color: PRIMARY_COLOR_2, width: 1.0)),
+                        labelText: "الاسم المستعار"),
+                    validator: (value) =>
+                        value.isEmpty ? "ادخل الاسم المستعار" : null,
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: TextFormField(
+                    onSaved: (value) => moreinfo = value,
+                    decoration: InputDecoration(
+                        border: OutlineInputBorder(
+                            borderRadius:
+                                BorderRadius.all(Radius.circular(20.0)),
+                            borderSide:
+                                BorderSide(color: PRIMARY_COLOR_2, width: 1.0)),
+                        labelText: "معلومات اضافية (اخياري)"),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Text(
+                    errorMsg,
+                    style: TextStyle(color: Colors.red),
+                  ),
+                ),
+                CustomRaisedButton(
+                  onTap: submit,
+                  text: "تسجيل الحساب",
+                )
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class SignUpAsOwner extends StatefulWidget {
+  @override
+  _SignUpAsOwnerState createState() => _SignUpAsOwnerState();
+}
+
+class _SignUpAsOwnerState extends State<SignUpAsOwner> {
+  GlobalKey<FormState> _formkey = GlobalKey<FormState>();
+  var name, password, username, moreinfo;
+  String errorMsg = "";
+  submit() async {
+    FormState fs = _formkey.currentState;
+    if (fs.validate()) {
+      fs.save();
+
+      if (!await addNewOwner(
+          name: name,
+          password: password,
+          username: username,
+          personalInfo: moreinfo)) {
+        setState(() {
+          errorMsg = "البيانات المدخلة غير صحيحة";
+        });
+      } else {
+        showDialog(
+            context: context,
+            builder: (context) {
+              return AlertDialog(
+                title: Text(
+                    "تم تسجيل الحساب $username بنجاح وسيتم تحويلك الى صفحة تسجيل الدخول خلال بضع ثوان"),
+              );
+            });
+        Timer(Duration(seconds: 3), () {
+          Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (context) => LoginPage()),
+              (x) => false);
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Form(
+        key: _formkey,
+        child: Column(
+          children: <Widget>[
+            TextFormField(
+              decoration: InputDecoration(
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(20.0)),
+                      borderSide:
+                          BorderSide(color: PRIMARY_COLOR_2, width: 1.0)),
+                  labelText: "اسم المستخدم"),
+              validator: (value) => value.isEmpty ? "ادخل اسم المستخدم" : null,
+              onSaved: (value) => username = value,
+            ),
+            TextFormField(
+              onSaved: (value) => password = value,
+              decoration: InputDecoration(
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(20.0)),
+                      borderSide:
+                          BorderSide(color: PRIMARY_COLOR_2, width: 1.0)),
+                  labelText: "كلمة السر"),
+              obscureText: true,
+              validator: (value) => value.isEmpty ? "ادخل كلمة المرور" : null,
+            ),
+            TextFormField(
+              onSaved: (value) => name = value,
+              decoration: InputDecoration(
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(20.0)),
+                      borderSide:
+                          BorderSide(color: PRIMARY_COLOR_2, width: 1.0)),
+                  labelText: "الاسم المستعار"),
+              validator: (value) =>
+                  value.isEmpty ? "ادخل الاسم المستعار" : null,
+            ),
+            TextFormField(
+              onSaved: (value) => moreinfo = value,
+              decoration: InputDecoration(
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(20.0)),
+                      borderSide:
+                          BorderSide(color: PRIMARY_COLOR_2, width: 1.0)),
+                  labelText: "معلومات اضافية (اخياري)"),
+            ),
+            Text(errorMsg),
+            CustomRaisedButton(
+              onTap: submit,
+              text: "تسجيل الحساب",
+            )
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+wrongUserNameOrPassword(context) {
+  showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(
+            "خطأ في اسم المستخدم او كلمة المرور",
+          ),
+          actions: <Widget>[
+            FlatButton(
+              child: Text(
+                "اغلاق",
+                textDirection: TextDirection.rtl,
+                style: TextStyle(color: PRIMARY_COLOR, fontFamily: "Din"),
+              ),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            )
+          ],
+        );
+      });
+}
+
+class ImagesGallery extends StatelessWidget {
+  final List<String> pics;
+  ImagesGallery({@required this.pics});
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("الصور"),
+      ),
+      body: ListView.builder(
+        itemCount: pics.length,
+        itemBuilder: (context, index) {
+          return Container(margin: EdgeInsets.all(16.0),
+            height: 200,
+            decoration: BoxDecoration(border: Border.all(color: PRIMARY_COLOR_2,width: 1.0),
+                image: DecorationImage(
+                    image: NetworkImage(pics[index]), fit: BoxFit.cover)),
+          );
+        },
       ),
     );
   }
