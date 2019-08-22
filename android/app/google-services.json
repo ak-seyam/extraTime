@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "909330371599",
+    "firebase_url": "https://extratime-b85f1.firebaseio.com",
+    "project_id": "extratime-b85f1",
+    "storage_bucket": "extratime-b85f1.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:909330371599:android:8830e5ce4524018b",
+        "android_client_info": {
+          "package_name": "com.example.extratime"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "909330371599-bgmpaa99me5acdshr70equt233l4v3j9.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.extratime",
+            "certificate_hash": "39624fa9e26b30648a9d89629a7cb623bae35876"
+          }
+        },
+        {
+          "client_id": "909330371599-jklip2gth9j1bftj1s12dsh5m7lh60ve.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCPLA1k2TD8Pi33pVLD2zQuYlDsw8pEzOY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "909330371599-jklip2gth9j1bftj1s12dsh5m7lh60ve.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

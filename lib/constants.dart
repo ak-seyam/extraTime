@@ -59,7 +59,7 @@ List<Stadium> samplesStadiums = [
       ])
 ];
 */
-
+//TODO:add connection exception return 
 Future<MySqlConnection> getConnection() async {
   return MySqlConnection.connect(ConnectionSettings(
       db: db,

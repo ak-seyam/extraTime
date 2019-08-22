@@ -115,8 +115,12 @@ class Owner extends User {
       s.timetable;
 }
 
+enum StadiumType { FIVE_PLAYERS_BASED, SIX_PLAYERS_BASED }
+
 class Stadium {
   int id;
+  int pricePerHour;
+  StadiumType _stadiumType;
   List<DTBlock> _timeTable = List<DTBlock>();
   String _phoneNumber;
   List<String> _pics;
@@ -130,7 +134,13 @@ class Stadium {
   String toString() {
     return "stadium's name: ${this.name}";
   }
-
+  set stadiumType(String type){
+    if(type == "0"){
+      this._stadiumType = StadiumType.FIVE_PLAYERS_BASED;
+    }else{
+      this._stadiumType = StadiumType.SIX_PLAYERS_BASED;
+    }
+  }
   set pics(List<String> pics) => this._pics = pics;
   get phone => this._phoneNumber;
   set phone(String phone) {
@@ -142,12 +152,28 @@ class Stadium {
     }
   }
 
+  String get stadiumType {
+    return (this._stadiumType == StadiumType.FIVE_PLAYERS_BASED)
+        ? "ملعب خماسي"
+        : "ملعب سداسي";
+  }
+
   set location(String location) => this._location = location;
-  Stadium({name, location, pics, otherInformations, phone}) : super() {
+  Stadium(
+      {String name,
+      String location,
+      pics,
+      otherInformations,
+      phone,
+      stadiumType = StadiumType.FIVE_PLAYERS_BASED,
+      int pricePerHour})
+      : super() {
     this._phoneNumber = phone;
     this.name = name;
     this._location = location;
     this._pics = pics;
+    this._stadiumType = stadiumType;
+    this.pricePerHour = pricePerHour;
   }
   prepareTimeTable() async {
     _timeTable = await getAllDateTimeBlockByStadiumId(stadiumId: id);
@@ -180,13 +206,6 @@ class Stadium {
   }
 }
 
-/*  bookign mechanism:
-      user will enter the booking date:
-          if it's occupied => error output message
-          else=> book from start to end time(start+ #hours)
-          transfer money from user's to owner's account    
- */
-
 class DTBlock {
   int id;
   DateTime start, end;
@@ -202,24 +221,32 @@ class DTBlock {
 }
 
 bool intersects(DTBlock block1, DTBlock block2) {
-  if(block1.start==null || block1.end==null || block2.start==null || block2.end==null) {
+  if (block1.start == null ||
+      block1.end == null ||
+      block2.start == null ||
+      block2.end == null) {
     print("true bcuz of nullability");
-    return true;}
-  if((!customIsAfter(block1.start, block2.end)||block1.start.compareTo(block2.end)==0)
-  &&((customIsAfter(block1.end, block2.start))||block1.end.compareTo(block2.start)==0)) {
+    return true;
+  }
+  if ((!customIsAfter(block1.start, block2.end) ||
+          block1.start.compareTo(block2.end) == 0) &&
+      ((customIsAfter(block1.end, block2.start)) ||
+          block1.end.compareTo(block2.start) == 0)) {
     print("""block1.start= ${block1.start} / block1.end= ${block1.end} 
     block2.end =${block2.end} / block2.start =${block2.start}
     ----------------------------------------
     block1.start.isBefore(block2.end) = ${!customIsAfter(block1.start, block2.end)}
     block1.end.isAfter(block2.start) = ${customIsAfter(block1.end, block2.start)}
     """);
-    return true;}
+    return true;
+  }
 
   return false;
 }
+
 /// returns true if datetime1 is after datetime2
-customIsAfter(DateTime dateTime1,DateTime dateTime2){
-  int dt1 = dateTime1.hour*3600+dateTime1.minute*60+dateTime1.second;
-  int dt2 = dateTime2.hour*3600+dateTime2.minute*60+dateTime1.second;
-  return dt1>dt2;
+customIsAfter(DateTime dateTime1, DateTime dateTime2) {
+  int dt1 = dateTime1.hour * 3600 + dateTime1.minute * 60 + dateTime1.second;
+  int dt2 = dateTime2.hour * 3600 + dateTime2.minute * 60 + dateTime1.second;
+  return dt1 > dt2;
 }

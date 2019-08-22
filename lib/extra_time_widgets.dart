@@ -166,7 +166,7 @@ class _StadiumCardState extends State<StadiumCard> {
       child: Container(
         decoration: BoxDecoration(
             border: Border.all(width: 1.0, color: widget.borderColor)),
-        height: 230.0,
+        height: 110.0,
         child: GestureDetector(
           onTap: () {
             Navigator.push(context, MaterialPageRoute(builder: (context) {
@@ -177,10 +177,11 @@ class _StadiumCardState extends State<StadiumCard> {
               );
             }));
           },
-          child: Column(
+          child: Row(
             children: <Widget>[
               Container(
-                height: 120.0,
+                height: 110.0,
+                width: 110.0,
                 decoration: BoxDecoration(
                   image: DecorationImage(
                       image: NetworkImage(
@@ -191,37 +192,58 @@ class _StadiumCardState extends State<StadiumCard> {
                       fit: BoxFit.fitWidth),
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Align(
-                  alignment: Alignment.centerRight,
-                  child: Container(
-                    margin: EdgeInsets.fromLTRB(5.0, 5.0, 10.0, 0.0),
-                    child: Column(
-                      children: <Widget>[
-                        Text(
+              Expanded(
+                child: Container(
+                  margin: EdgeInsets.fromLTRB(5.0, 5.0, 10.0, 0.0),
+                  child: Column(
+                    children: <Widget>[
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: Text(
                           widget.stadium.name,
                           textDirection: TextDirection.rtl,
-                          style: TextStyle(fontFamily: "Din", fontSize: 25.0),
+                          style: TextStyle(
+                              fontFamily: "Din",
+                              fontSize: 18.0,
+                              fontWeight: FontWeight.w500),
                         ),
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: Text(
-                            "رقم الهاتف: ${widget.stadium.phone}",
-                            textDirection: TextDirection.rtl,
-                            style: TextStyle(fontFamily: "Din"),
-                          ),
+                      ),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: Text(
+                          "رقم الهاتف: ${widget.stadium.phone}",
+                          textDirection: TextDirection.rtl,
+                          style: TextStyle(fontFamily: "Din"),
                         ),
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: Text(
-                            "العنوان: ${widget.stadium.location}",
-                            textDirection: TextDirection.rtl,
-                            style: TextStyle(fontFamily: "Din"),
+                      ),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: Text(
+                          "العنوان: ${widget.stadium.location}",
+                          textDirection: TextDirection.rtl,
+                          style: TextStyle(fontFamily: "Din"),
+                        ),
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: <Widget>[
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(8.0,4.0,0.0,0.0),
+                            child: StadiumEntitiy(
+                              text: "${widget.stadium.pricePerHour}",
+                              icon: Icon(Icons.monetization_on ,color: Colors.white,size: 20.0,),
+                            ),
                           ),
-                        )
-                      ],
-                    ),
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(8.0,4.0,0.0,0.0),
+                            child: StadiumEntitiy(
+                              text: "${widget.stadium.stadiumType}",
+                              icon: Icon(Icons.stay_current_landscape,color: Colors.white,size: 20.0,),
+                            ),
+                          )
+                        ],
+                      )
+                    ],
                   ),
                 ),
               ),
@@ -325,12 +347,18 @@ class _MoreInfoState extends State<MoreInfo> {
     return Scaffold(
       body: Column(
         children: <Widget>[
-          GestureDetector(onTap: (){
-            Navigator.push(context, MaterialPageRoute(builder: (context){
-              return ImagesGallery(pics: widget.stadium.pics.isNotEmpty?widget.stadium.pics:["http://www.polyplastic-piscine-34.com/images/no-images/no-image.jpg"]);
-            }));
-          },
-                      child: Stack(
+          GestureDetector(
+            onTap: () {
+              Navigator.push(context, MaterialPageRoute(builder: (context) {
+                return ImagesGallery(
+                    pics: widget.stadium.pics.isNotEmpty
+                        ? widget.stadium.pics
+                        : [
+                            "http://www.polyplastic-piscine-34.com/images/no-images/no-image.jpg"
+                          ]);
+              }));
+            },
+            child: Stack(
                 alignment: Alignment.bottomCenter,
                 textDirection: TextDirection.rtl,
                 children: <Widget>[
@@ -648,10 +676,12 @@ class _UserProfileState extends State<UserProfile> {
   @override
   void initState() {
     super.initState();
-    print("USER INFO ${widget.user.personalInfo}\n is empty ${widget.user.personalInfo.isEmpty}\n first element equals nothing ${widget.user.personalInfo[0]==""}");
+    print(
+        "USER INFO ${widget.user.personalInfo}\n is empty ${widget.user.personalInfo.isEmpty}\n first element equals nothing ${widget.user.personalInfo[0] == ""}");
 
     personalInfo = (widget.user.personalInfo != null &&
-            widget.user.personalInfo.isNotEmpty && widget.user.personalInfo[0]!="")
+            widget.user.personalInfo.isNotEmpty &&
+            widget.user.personalInfo[0] != "")
         ? ListView.builder(
             scrollDirection: Axis.vertical,
             shrinkWrap: true,
@@ -664,7 +694,11 @@ class _UserProfileState extends State<UserProfile> {
               );
             },
           )
-        : Text("عفوًا لا توجد معلومات شخصية",style: TextStyle(fontFamily: "Din"),textDirection: TextDirection.rtl,);
+        : Text(
+            "عفوًا لا توجد معلومات شخصية",
+            style: TextStyle(fontFamily: "Din"),
+            textDirection: TextDirection.rtl,
+          );
   }
 
   @override
@@ -792,19 +826,18 @@ class Notifications extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("اشعارات"),),
-      body: 
-          ListView.builder(
-              
-              itemCount: user.notifications.length,
-              itemBuilder: (context, index) {
-                return CustomField(
-                  borderColor: primaryColor,
-                  text: user.notifications[index],
-                );
-              },
-            )  
-    );
+        appBar: AppBar(
+          title: Text("اشعارات"),
+        ),
+        body: ListView.builder(
+          itemCount: user.notifications.length,
+          itemBuilder: (context, index) {
+            return CustomField(
+              borderColor: primaryColor,
+              text: user.notifications[index],
+            );
+          },
+        ));
   }
 }
 
@@ -1175,7 +1208,8 @@ class AddStadiumRoute extends StatefulWidget {
 
 class _AddStadiumRouteState extends State<AddStadiumRoute> {
   GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  String name, location, phone;
+  String name, location, phone,pricePerHour;
+  StadiumType stadiumType = StadiumType.FIVE_PLAYERS_BASED;
   List<String> pics = List<String>(), posts = List<String>();
   DTBlock dtblock;
   int countPics = 1;
@@ -1196,7 +1230,10 @@ class _AddStadiumRouteState extends State<AddStadiumRoute> {
                 name: name,
                 owner: widget.owner,
                 phone: phone,
-                pics: pics)) {
+                pics: pics,
+                pricePerHour: int.parse(this.pricePerHour),
+                stadiumType: stadiumType
+                )) {
               Navigator.of(context).pop();
             } else {
               showDialog(
@@ -1260,6 +1297,40 @@ class _AddStadiumRouteState extends State<AddStadiumRoute> {
                         borderSide:
                             BorderSide(width: 1.0, color: PRIMARY_COLOR_2))),
                 onSaved: (value) => this.phone = value,
+              ),
+              TextFormField(
+                keyboardType: TextInputType.numberWithOptions(
+                    decimal: false, signed: false),
+                decoration: InputDecoration(
+                    labelText: "السعر للساعه",
+                    border: UnderlineInputBorder(
+                        borderSide:
+                            BorderSide(width: 1.0, color: PRIMARY_COLOR_2))),
+                onSaved: (value) => this.pricePerHour = value,
+              ),
+              Row(
+                children: <Widget>[
+                  Text("خماسي"),
+                  Radio(
+                    value: StadiumType.FIVE_PLAYERS_BASED,
+                    groupValue: this.stadiumType,
+                    onChanged: (StadiumType st){
+                      setState(() {
+                        this.stadiumType = st;
+                      });
+                    },
+                  ),
+                  Text("سداسي"),
+                  Radio(
+                    value: StadiumType.SIX_PLAYERS_BASED,
+                    groupValue: this.stadiumType,
+                    onChanged: (StadiumType st){
+                      setState(() {
+                        this.stadiumType = st;
+                      });
+                    },
+                  )
+                ],
               ),
               GestureDetector(
                   onTap: () {
@@ -1405,10 +1476,11 @@ class _CustomListTileState extends State<CustomListTile> {
                         actions: <Widget>[
                           FlatButton(
                             child: Text("تأكيد"),
-                            onPressed: () {setState(() {
-                              widget.block.confirmed = true;
-                              acceptDateTimeBlock(dtBlock: widget.block);
-                            });
+                            onPressed: () {
+                              setState(() {
+                                widget.block.confirmed = true;
+                                acceptDateTimeBlock(dtBlock: widget.block);
+                              });
                               Navigator.of(context).pop();
                             },
                           )
@@ -1435,9 +1507,95 @@ class NOSIGNINGINListOfStadiums extends StatefulWidget {
 }
 
 class _NOSIGNINGINListOfStadiumsState extends State<NOSIGNINGINListOfStadiums> {
+  _connectionTest(context) async {
+    try {
+      var result = await InternetAddress.lookup('google.com');
+    } on SocketException {
+      Timer(Duration(seconds: 2), () {
+        Navigator.pushAndRemoveUntil(context,
+            MaterialPageRoute(builder: (context) {
+          return LoginPage();
+        }), (x) => false);
+      });
+      showDialog(
+          context: context,
+          builder: (context) {
+            return AlertDialog(
+              title: Text("تأكد من اتصالك بالانترنت ثم قم بإعادة المحاولة"),
+            );
+          });
+    }
+  }
+
+  @override
+  void initState() {
+    _connectionTest(context);
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+            border: Border.all(color: PRIMARY_COLOR_2, width: 1.0)),
+        alignment: Alignment.center,
+        height: 110.0,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            Text(
+              "للاستفادة من مزايا التطبيق يتوجب عليك التسجيل",
+              style: TextStyle(fontFamily: "Din"),
+            ),
+            Row(
+              children: <Widget>[
+                CustomRaisedButton(
+                  onTap: () {
+                    Navigator.push(context,
+                        MaterialPageRoute(builder: (context) => LoginPage()));
+                  },
+                  text: "تسجيل الدخول",
+                ),
+                CustomRaisedButton(
+                  onTap: () {
+                    showDialog(
+                        context: context,
+                        builder: (context) {
+                          return AlertDialog(
+                            title: Text("سجل حساب جديد كـ"),
+                            actions: <Widget>[
+                              GestureDetector(
+                                child: Text("سجل كلاعب"),
+                                onTap: () {
+                                  _connectionTest(context);
+                                  Navigator.push(context,
+                                      MaterialPageRoute(builder: (context) {
+                                    return SignUpAsPlayer();
+                                  }));
+                                },
+                              ),
+                              GestureDetector(
+                                  onTap: () {
+                                    _connectionTest(context);
+                                    Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                            builder: (context) =>
+                                                SignUpAsOwner()));
+                                  },
+                                  child: Text("سجل كصاحب ملاعب"))
+                            ],
+                          );
+                        });
+                  },
+                  text: "تسجيل حساب جديد",
+                ),
+              ],
+            )
+          ],
+        ),
+      ),
       body: ListOfStadiums(
         borderColor: PRIMARY_COLOR,
         stadiums: widget.stadiums,
@@ -1454,7 +1612,7 @@ class _NOSIGNINGINListOfStadiumsState extends State<NOSIGNINGINListOfStadiums> {
               child: Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: Icon(
-                  Icons.account_circle,
+                  Icons.contact_phone,
                   color: PRIMARY_COLOR_TEXT,
                 ),
               ))
@@ -1843,13 +2001,51 @@ class ImagesGallery extends StatelessWidget {
       body: ListView.builder(
         itemCount: pics.length,
         itemBuilder: (context, index) {
-          return Container(margin: EdgeInsets.all(16.0),
+          return Container(
+            margin: EdgeInsets.all(16.0),
             height: 200,
-            decoration: BoxDecoration(border: Border.all(color: PRIMARY_COLOR_2,width: 1.0),
+            decoration: BoxDecoration(
+                border: Border.all(color: PRIMARY_COLOR_2, width: 1.0),
                 image: DecorationImage(
                     image: NetworkImage(pics[index]), fit: BoxFit.cover)),
           );
         },
+      ),
+    );
+  }
+}
+
+class StadiumEntitiy extends StatelessWidget {
+  final Icon icon;
+  final String text;
+  StadiumEntitiy({@required this.icon, @required this.text});
+  @override
+  Widget build(BuildContext context) {
+    return Directionality(
+      textDirection: TextDirection.rtl,
+          child: Container(
+        height: 30.0,
+        decoration: BoxDecoration(
+          color: Colors.grey[300],
+          borderRadius: BorderRadius.circular(15.0),
+        ),
+      child: Row(
+        children: <Widget>[
+          Container(
+            width: 30.0,
+            height: 30.0,
+            decoration: BoxDecoration(
+              color: PRIMARY_COLOR,
+              borderRadius: BorderRadius.circular(15.0),
+            ),
+            child: icon,
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(8.0,0.0,8.0,0.0),
+            child: Text(text,style: TextStyle(fontFamily: "Din"),),
+          )
+        ],
+      ),
       ),
     );
   }
