@@ -411,6 +411,7 @@ addToOrRemoveFromFav(
           [playerId, stadiumId]);
     }
   }
+  connection.close();
 }
 
 addNewNotification({Player player, String notification}) async {
@@ -442,7 +443,6 @@ addNewPost({int stadiumId, String post}) async {
 
 }
 
-//oto
 addDTBlockFormStadium({int playerId, int stadiumId, DTBlock dtBlock}) async {
   MySqlConnection connection = await getConnection();
   await connection.query(
@@ -470,6 +470,7 @@ changeAvatar({int userId, int avatarIndex}) async {
   await connection.query(
       "UPDATE USER SET PROFILE_PICTURE_INDEX = ? WHERE ID =?",
       [avatarIndex, userId]);
+    connection.close();
 }
 
 acceptDateTimeBlock({DTBlock dtBlock}) async {
@@ -477,6 +478,7 @@ acceptDateTimeBlock({DTBlock dtBlock}) async {
   final connection = await getConnection();
   await connection.query(
       "UPDATE BLOCK_STADIUM SET CONFIRMED = ? WHERE ID =?", [1, dtBlockId]);
+  connection.close();
 }
 
 //////////////////////////////////////////////////
@@ -490,5 +492,6 @@ Future<bool> isInFav(Player user, Stadium stadium) async {
   Results result = await connection.query(
       "Select STADIUM_ID FROM FAV_LIST where PLAYER_ID=?",
       [stadium.id, user.id]);
+  connection.close();
   return result.elementAt(0)[0] != null;
 }
