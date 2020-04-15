@@ -10,9 +10,9 @@ import 'package:mysql1/mysql1.dart';
 ///  used to get out objects from database     ///
 //////////////////////////////////////////////////
 
-///Get user by username and password or id:
+///Get player by username and password or id:
 ///    @args : [(username & password) | id]
-///   `EXPECTED_OUTPUT` : a complete [Player|Owner] object
+///   `EXPECTED_OUTPUT` : a complete [Player] object
 
 Future<Player> getPlayer({username, password, id}) async {
   final connection = await getConnection();
@@ -70,6 +70,9 @@ Future<Player> getPlayer({username, password, id}) async {
     return null;
   }
 }
+///Get owner by username and password or id:
+///    @args : [(username & password) | id]
+///   `EXPECTED_OUTPUT` : a complete [Player] object
 
 Future<Owner> getOwner({username, password, id}) async {
   final connection = await getConnection();
@@ -115,7 +118,6 @@ Future<Stadium> getStadiumById({id}) async {
   Results results =
       await connection.query("select * from STADIUM where ID = ?", [id]);
 
-//TODO: checkpoint
   Stadium result = Stadium();
   for (var item in results) {
     result.id = item[0];
